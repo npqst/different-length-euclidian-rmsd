@@ -5,7 +5,7 @@ class DynamicTimeWarpDistance():
     def __init__(self):
         return
 
-    def dtw_rmsd_dist(self, x, y, get_alignment=False, normalised=True, rmsd_equivalent=True):
+    def dtw_dist(self, x, y, get_alignment=False, normalised=True, rmsd_equivalent=True):
         dist_mat = self._calc_dist_matrix(x, y)
         
         if rmsd_equivalent is True:

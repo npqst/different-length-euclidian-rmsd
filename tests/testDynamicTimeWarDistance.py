@@ -35,17 +35,16 @@ class TestDynamicTimeWarpDistance(unittest.TestCase):
         dtw = DynamicTimeWarpDistance()
 
         rmsd = np.sqrt(np.sum(np.sum(x**2, axis=-1) )/ len(x))
-        a = dtw.dtw_rmsd_dist(x, y)
+        a = dtw.dtw_dist(x, y)
         self.assertAlmostEqual(a, rmsd, places=10)
 
 
         x = np.asarray([[*range(12)],[*range(12)],[*range(12)]]).T + np.random.rand(12, 3)
         y = np.asarray([[*range(12)],[*range(12)],[*range(12)]]).T + np.random.rand(12, 3)
-        # y = np.random.rand(12, 3)
 
         rmsd = np.sqrt(np.sum(np.sum((x-y)**2, axis=-1) )/ len(x))
-        a, b = dtw.dtw_rmsd_dist(x, y, get_alignment=True)
-        # check diagonal path thrugh matrix:
+        a, b = dtw.dtw_dist(x, y, get_alignment=True)
+        # check diagonal path through matrix:
         for i in range(len(x)-1):
             self.assertEqual(b[i], (i,i))
         self.assertAlmostEqual(a, rmsd, places=10)
