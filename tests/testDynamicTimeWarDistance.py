@@ -21,10 +21,10 @@ class TestDynamicTimeWarpDistance(unittest.TestCase):
         test_matrix = np.asarray([[0, 2, 2, 4],[-1, 1, 6, -10],[-2, -2, 1, 0]])
         min_dist = -6
         dtw = DynamicTimeWarpDistance()
-        a = dtw._dp_path_search(test_matrix)
+        a = dtw._dp_path_search(test_matrix, normalised=False)
         self.assertEqual(min_dist, a)
 
-        a, b = dtw._dp_path_search(test_matrix, get_alignment=True)
+        a, b = dtw._dp_path_search(test_matrix, get_alignment=True, normalised=False)
         self.assertEqual(min_dist, a)
         self.assertEqual(b, [(0, 0), (0, 1), (0, 2), (1, 3)])
 
@@ -34,6 +34,18 @@ class TestDynamicTimeWarpDistance(unittest.TestCase):
 
         dtw = DynamicTimeWarpDistance()
 
-        dist = np.linalg.norm(x)
+        rmsd = np.sqrt(np.sum(np.sum(x**2, axis=-1) )/ len(x))
         a = dtw.dtw_rmsd_dist(x, y)
-        self.assertAlmostEqual(a, dist, places=10)
+        self.assertAlmostEqual(a, rmsd, places=10)
+
+
+        x = np.asarray([[*range(12)],[*range(12)],[*range(12)]]).T + np.random.rand(12, 3)
+        y = np.asarray([[*range(12)],[*range(12)],[*range(12)]]).T + np.random.rand(12, 3)
+        # y = np.random.rand(12, 3)
+
+        rmsd = np.sqrt(np.sum(np.sum((x-y)**2, axis=-1) )/ len(x))
+        a, b = dtw.dtw_rmsd_dist(x, y, get_alignment=True)
+        # check diagonal path thrugh matrix:
+        for i in range(len(x)-1):
+            self.assertEqual(b[i], (i,i))
+        self.assertAlmostEqual(a, rmsd, places=10)

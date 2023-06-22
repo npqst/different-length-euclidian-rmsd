@@ -5,26 +5,44 @@ class DynamicTimeWarpDistance():
     def __init__(self):
         return
 
-    def dtw_rmsd_dist(self, x, y, get_alignment=False):
+    def dtw_rmsd_dist(self, x, y, get_alignment=False, normalised=True, rmsd_equivalent=True):
         dist_mat = self._calc_dist_matrix(x, y)
-        min_dist = self._dp_path_search(
+        
+        if rmsd_equivalent is True:
+            min_dist = self._dp_path_search(
                                         dist_mat,
-                                        rmsd_equivalent=True,
-                                        get_alignment=get_alignment
+                                        get_alignment=get_alignment,
+                                        normalised=True
                                         )
+            if get_alignment:
+                return np.sqrt(min_dist[0]), min_dist[1]
+            return np.sqrt(min_dist)
+        else:
+            min_dist = self._dp_path_search(
+                                    dist_mat,
+                                    get_alignment=get_alignment,
+                                    normalised=normalised
+                                    )
         return min_dist
 
     @staticmethod
     def _dp_path_search(dist_matrix,
                         get_alignment=False,
-                        rmsd_equivalent=False
+                        normalised=True
                         ):
         dtw_mat = np.ones_like(dist_matrix, dtype=float) * np.inf
         dtw_mat[0, 0] = 0.
+        if normalised is True:
+            path_length_mat = np.zeros_like(dist_matrix)
+        # else:                   # add dimension to count path length for normalisation
+        #     dtw_mat = np.stack([np.ones_like(dist_matrix, dtype=float) * np.inf,
+        #                        np.zeros_like(dist_matrix)],
+        #                        axis=-1)
+        #     dtw_mat[0, 0, 0] = 0.
 
         def select_min_cost_origin(m, n):
             if m > 0 and n > 0:
-                if not get_alignment:
+                if not get_alignment and not normalised:
                     return min([
                                 dtw_mat[m-1, n-1],
                                 dtw_mat[m-1, n],
@@ -50,6 +68,16 @@ class DynamicTimeWarpDistance():
                 cost = dist_matrix[i, j]
                 min_origin, idx_origin = select_min_cost_origin(i, j)
                 dtw_mat[i, j] = cost + min_origin
+                if normalised is True:
+                # else:           # increment path length to normalise by
+                    # dtw_mat[i, j, 0] = cost + min_origin
+                    if idx_origin == (None, None):
+                        path_length_mat[i, j] = 1
+                    else:
+                        path_length_mat[i, j] = path_length_mat[
+                                            idx_origin[0],
+                                            idx_origin[1]
+                                            ] + 1
                 if get_alignment:
                     paths[i][j] = idx_origin
         if get_alignment:
@@ -58,14 +86,14 @@ class DynamicTimeWarpDistance():
             while origin != (None, None):
                 min_path.insert(0, origin)
                 origin = paths[origin[0]][origin[1]]
-            if rmsd_equivalent == False:
-                return dtw_mat[-1, -1], min_path
+            if normalised:
+                return dtw_mat[-1, -1]/path_length_mat[-1, -1], min_path 
             else:
-                return np.sqrt(dtw_mat[-1, -1])
-        if rmsd_equivalent is False:
-            return dtw_mat[-1, -1]
+                return dtw_mat[-1, -1], min_path
+        if normalised:
+            return dtw_mat[-1, -1] / path_length_mat[-1, -1]
         else:
-            return np.sqrt(dtw_mat[-1, -1])
+            return dtw_mat[-1, -1]
 
     @staticmethod
     def _calc_dist_matrix(x, y):
