@@ -34,11 +34,6 @@ class DynamicTimeWarpDistance():
         dtw_mat[0, 0] = 0.
         if normalised is True:
             path_length_mat = np.zeros_like(dist_matrix)
-        # else:                   # add dimension to count path length for normalisation
-        #     dtw_mat = np.stack([np.ones_like(dist_matrix, dtype=float) * np.inf,
-        #                        np.zeros_like(dist_matrix)],
-        #                        axis=-1)
-        #     dtw_mat[0, 0, 0] = 0.
 
         def select_min_cost_origin(m, n):
             if m > 0 and n > 0:
@@ -69,8 +64,6 @@ class DynamicTimeWarpDistance():
                 min_origin, idx_origin = select_min_cost_origin(i, j)
                 dtw_mat[i, j] = cost + min_origin
                 if normalised is True:
-                # else:           # increment path length to normalise by
-                    # dtw_mat[i, j, 0] = cost + min_origin
                     if idx_origin == (None, None):
                         path_length_mat[i, j] = 1
                     else:
