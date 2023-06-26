@@ -3,8 +3,19 @@ from scipy.interpolate import splprep, splev
 
 
 class StructuralUpsamplingRMSD:
-    def __init__(self):
+    def __init__(self, upsampling_length=None):
+        self.upsampling_length = upsampling_length
         return
+
+    def calc_rmsd(self, x, y, new_length=None):
+        if new_length is None:
+            if self.upsampling_length is None:
+                new_length = 20
+            elif isinstance(self.upsampling_length, int):
+                new_length = self.upsampling_length
+        if max(len(x), len(y)) > new_length:
+            new_length = max(len(x), len(y))
+        return self.calc_upsampled_rmsd(x, y, upsample_to=new_length)
 
     def calc_upsampled_rmsd(self, x, y, upsample_to=20):
         upsampled_x = self._upsample(x, new_length=upsample_to)
